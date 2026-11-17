@@ -18,7 +18,7 @@ from keyring import errors as keyring_errors
 SERVICE = "bbwatch-lguide"
 TOKEN_KEY = "sync-token"
 URL_KEY = "base-url"
-DEFAULT_URL = "https://lguide.net"
+DEFAULT_URL = "https://lguide-pomodoro-api.zhuan0140.workers.dev"
 
 
 def store_connection(token: str, base_url: str = DEFAULT_URL) -> None:

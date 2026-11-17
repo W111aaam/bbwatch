@@ -227,7 +227,7 @@ Windows CLI 用户运行 `bbwatch dashboard`；Claude Code 用户使用[实际�
 在 LGUide 的 Blackboard 页面生成同步令牌，然后运行：
 
 ```bash
-bbwatch lguide-connect --url https://lguide.net
+bbwatch lguide-connect --url https://lguide-pomodoro-api.zhuan0140.workers.dev
 ```
 
 按提示粘贴令牌（输入不回显）。令牌保存在系统钥匙串；学校账号密码、Blackboard
