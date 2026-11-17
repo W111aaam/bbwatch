@@ -219,6 +219,20 @@ Windows CLI 用户运行 `bbwatch dashboard`；Claude Code 用户使用[实际�
 | `bbwatch find slides` | 按关键词检索本地下载记录 |
 | `bbwatch dashboard` | 启动网页看板；可用 `--port 8766` 更换端口 |
 | `bbwatch config` / `bbwatch doctor` | 查看配置 / 本地自检 |
+| `bbwatch lguide-connect` | 连接 LGUide；之后每次扫描自动同步 |
+| `bbwatch lguide-sync` / `bbwatch lguide-disconnect` | 立即同步 / 移除本机同步令牌 |
+
+### 同步到 LGUide
+
+在 LGUide 的 Blackboard 页面生成同步令牌，然后运行：
+
+```bash
+bbwatch lguide-connect --url https://lguide.net
+```
+
+按提示粘贴令牌（输入不回显）。令牌保存在系统钥匙串；学校账号密码、Blackboard
+Cookie 和下载的课件文件始终留在本机。连接后每次 `bbwatch scan` 都会自动上传作业、
+DDL、公告与课件元数据；同步失败不会影响本次 Blackboard 扫描结果。
 
 <a id="faq"></a>
 

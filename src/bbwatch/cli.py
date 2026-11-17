@@ -238,6 +238,49 @@ def cmd_scan(_args) -> int:
         client, store, MacNotifier(), now=now_utc(),
         course_filter=make_course_filter(cfg), archive_weeks=cfg.archive_overdue_weeks,
     ))
+    try:
+        from .lguide import sync_if_configured
+        result = sync_if_configured(paths.db_path)
+        if result:
+            counts = result.get("counts", {})
+            print(f"LGUide 已同步：作业 {counts.get('tasks', 0)}，公告 {counts.get('announcements', 0)}，课件 {counts.get('materials', 0)}。")
+    except Exception as exc:  # noqa: BLE001
+        print(f"⚠ Blackboard 扫描成功，但 LGUide 同步失败：{exc}", file=sys.stderr)
+    return 0
+
+
+def cmd_lguide_connect(args) -> int:
+    from .lguide import prompt_and_store, sync_if_configured
+    paths = AppPaths()
+    paths.ensure_dirs()
+    prompt_and_store(args.url, args.token)
+    print("LGUide 同步令牌已安全保存到系统钥匙串。")
+    if paths.db_path.exists():
+        result = sync_if_configured(paths.db_path)
+        counts = result.get("counts", {}) if result else {}
+        print(f"首次同步完成：作业 {counts.get('tasks', 0)}，公告 {counts.get('announcements', 0)}，课件 {counts.get('materials', 0)}。")
+    else:
+        print("尚无扫描数据；运行 bbwatch scan 后将自动同步。")
+    return 0
+
+
+def cmd_lguide_sync(_args) -> int:
+    from .lguide import load_connection, upload_snapshot
+    paths = AppPaths()
+    connection = load_connection()
+    if not connection:
+        raise RuntimeError("尚未连接 LGUide，请先运行 bbwatch lguide-connect")
+    token, url = connection
+    result = upload_snapshot(paths.db_path, token, url)
+    counts = result.get("counts", {})
+    print(f"LGUide 同步完成：作业 {counts.get('tasks', 0)}，公告 {counts.get('announcements', 0)}，课件 {counts.get('materials', 0)}。")
+    return 0
+
+
+def cmd_lguide_disconnect(_args) -> int:
+    from .lguide import clear_connection
+    clear_connection()
+    print("已从本机钥匙串移除 LGUide 同步令牌。")
     return 0
 
 
@@ -402,6 +445,12 @@ def main(argv=None) -> int:
     p_find.set_defaults(fn=cmd_find)
     sub.add_parser("config", help="查看/生成配置文件").set_defaults(fn=cmd_config)
     sub.add_parser("doctor", help="健康自检(凭据/会话/数据库/端口)").set_defaults(fn=cmd_doctor)
+    p_lguide = sub.add_parser("lguide-connect", help="连接 LGUide，扫描后自动同步")
+    p_lguide.add_argument("--url", default="https://lguide.net", help="LGUide 站点地址")
+    p_lguide.add_argument("--token", help="同步令牌；省略时安全提示输入")
+    p_lguide.set_defaults(fn=cmd_lguide_connect)
+    sub.add_parser("lguide-sync", help="立即把本地 bbwatch 快照同步到 LGUide").set_defaults(fn=cmd_lguide_sync)
+    sub.add_parser("lguide-disconnect", help="移除本机 LGUide 同步令牌").set_defaults(fn=cmd_lguide_disconnect)
     p_un = sub.add_parser("uninstall", help="清除凭据/会话(可选数据库)")
     p_un.add_argument("--purge-db", action="store_true", help="同时删除本地数据库")
     p_un.add_argument("--yes", action="store_true", help="跳过确认")
